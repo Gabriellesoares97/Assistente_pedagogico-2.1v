@@ -154,6 +154,15 @@
   .pill-group { display: flex; gap: 4px; flex-wrap: wrap; }
   .pill { border: 1.3px solid #D9CCEF; background: #fff; color: #6B5E85; border-radius: 20px; padding: 5px 11px; font-size: 12px; cursor: pointer; }
   .pill.active { background: var(--cor-destaque, #0EA5B7); border-color: var(--cor-destaque, #0EA5B7); color: var(--cor-destaque-contraste, #fff); font-weight: 600; }
+  .pill-row-compacto { display: flex; gap: 6px; }
+  .pill-compacto { padding: 5px 13px; font-weight: 600; }
+  .stepper-numero { display: flex; align-items: center; gap: 10px; }
+  .stepper-numero button { width: 30px; height: 30px; border-radius: 8px; border: 1.3px solid #D9CCEF; background: #fff; color: #453467; font-size: 16px; font-weight: 700; cursor: pointer; line-height: 1; }
+  .stepper-numero button:hover { background: #F1ECFB; }
+  .stepper-numero span { min-width: 24px; text-align: center; font-size: 15px; font-weight: 700; color: #453467; }
+  .presets-rapidos { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  .preset-chip { border: 1.3px dashed #C9B8E8; background: #FAF7FE; color: #7A5FA8; border-radius: 14px; padding: 4px 10px; font-size: 11.5px; cursor: pointer; }
+  .preset-chip:hover { background: #F1ECFB; border-style: solid; }
 
   .material-row { display: flex; flex-direction: column; gap: 6px; }
   .material-item { display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 12.5px; color: #6B5E85; }
@@ -188,6 +197,7 @@
   .resumo-section { padding: 16px 20px; border-top: 1px solid #E7DCF5; }
   .resumo-title { font-family: 'Fraunces', Georgia, serif; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
   .resumo-sub { font-size: 11px; color: var(--cor-texto, #8A7FA8); margin-bottom: 10px; }
+  .resumo-aulas-dadas { font-size: 13px; font-weight: 700; color: #453467; background: #EFE7FA; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; display: inline-block; }
   table.resumo { width: 100%; border-collapse: collapse; font-size: 12px; }
   table.resumo th { font-size: 10px; font-weight: 700; color: #7A6F94; text-transform: uppercase; letter-spacing: 0.3px; padding: 8px 6px; border-bottom: 2px solid #E7DCF5; text-align: center; white-space: nowrap; }
   table.resumo th.name-col { text-align: left; min-width: 140px; }
@@ -223,6 +233,7 @@
   .avaliativa-nota { width: 70px; border: 1px solid #D9CCEF; border-radius: 6px; padding: 5px 8px; font-size: 12.5px; text-align: center; }
   .nota-manual-input { width: 48px; border: 1.3px dashed #C9B8E8; border-radius: 6px; padding: 4px 6px; font-size: 12.5px; text-align: center; font-weight: 700; color: #7A5FA8; background: #FAF7FE; }
   .nota-manual-input:focus { outline: none; border-style: solid; border-color: #8E6FC1; }
+  .nota-manual-print-only { display: none; }
   .obs-box textarea { border: 1px solid #E7DCF5; border-radius: 6px; padding: 8px 10px; font-size: 12.5px; resize: vertical; width: 100%; color: #453467; }
 
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
@@ -311,7 +322,7 @@
     body { background: #fff; color: #000; }
     /* esconde toda a navegação e ações — só o conteúdo do relatório fica visível */
     .sidebar, .turma-modo-tabs, .bimestres-nav, .bimestre-detail, .dias-nav, .dias-hint,
-    .dia-detail, .alunos-wrap, .legend, .modal-overlay, .install-banner,
+    .dia-detail, .alunos-wrap, .legend, .modal-overlay,
     .ferramentas-rail, .ferramentas-drawer, .ferramentas-backdrop,
     .btn-ver-grafico, .btn-imprimir, .turma-acoes-secundarias,
     .btn-add-aluno, .btn-novo-dia, .btn-novo-bimestre, .btn-seta, .btn-seta-bimestre,
@@ -329,10 +340,15 @@
     .header-grid { display: none; }
     .dias-semana-turma-field { display: none; }
     .sala-futuro-dia-destaque { display: none; }
+    .presets-rapidos { display: none; }
+    .stepper-numero button { display: none; }
+    .pill-row-compacto { display: none; }
     .resumo-title, .atividades-section .resumo-title { color: #000; }
     .resumo-section, .atividades-section, .obs-grid { break-inside: avoid; page-break-inside: avoid; }
     table.resumo { border: 1px solid #999; }
     table.resumo th, table.resumo td { border: 1px solid #ccc; color: #000; }
+    .nota-manual-input { display: none; }
+    .nota-manual-print-only { display: inline; color: #000 !important; }
     .resumo-scroll { overflow: visible; }
     /* mostra a lista de quem entregou cada atividade sempre expandida no papel,
        já que o botão de expandir/recolher (interativo) fica escondido no print */
@@ -398,6 +414,7 @@ function FREQ_OPTS() {
     { key: "presente", label: t("presente") },
     { key: "ausente", label: t("ausente") },
     { key: "atraso", label: t("atraso") },
+    { key: "falta_medica", label: t("falta_medica") },
   ];
 }
 function ATIV_OPTS() {
@@ -529,7 +546,16 @@ function marcarTodosPresentes(turmaId, bimestreId, diaId) {
 }
 
 function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
-function hoje() { return new Date().toISOString().slice(0, 10); }
+// formata um objeto Date como "AAAA-MM-DD" usando o horário LOCAL do aparelho —
+// nunca usar toISOString() pra isso, porque ela converte pra UTC e pode devolver
+// o dia de amanhã (ou de ontem) dependendo da hora e do fuso horário da pessoa
+function formatarDataLocalISO(d) {
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+function hoje() { return formatarDataLocalISO(new Date()); }
 
 // ordena por nome, ignorando maiúsculas/acentos; itens sem nome vão para o final
 function comparaPorNome(a, b) {
@@ -570,13 +596,15 @@ function novaAvaliacao() { return { id: uid(), nome: "", notas: {} }; }
 function novaProvaPaulista() { return { id: uid(), nome: "", notas: {} }; }
 function novoAlunoRoster() { return { id: uid(), nome: "", noMapeamento: true }; }
 function novoDia(numero) {
-  return { id: uid(), data: hoje(), numeroAula: String(numero), registros: {}, registradoSalaFuturo: false, conteudoAula: "" };
+  return { id: uid(), data: hoje(), numeroAula: String(numero), registros: {}, registradoSalaFuturo: false, conteudoAula: "", quantidadeAulas: 1 };
 }
 function registroDefault() {
   return {
     frequencia: null, atividade: null, trabalho: null, caderno: false, apostila: false, tarefas: false,
     celularSemAutorizacao: false, comportamento: null, mapeamento: null,
     foraSemPermissao: false, roupaInadequada: false, semMaterial: false, objetoNaoPedagogico: false,
+    conversasParalelas: false, falandoPalavrao: false, atrapalharAula: false,
+    ausenciaNaoAutorizada: false, naoRealizandoAtividade: false,
     observacoes: "",
   };
 }
@@ -737,7 +765,7 @@ function migrarSeNecessario(parsed) {
             d.registros[alunoId].celularSemAutorizacao = false;
           }
           if (!("mapeamento" in d.registros[alunoId])) d.registros[alunoId].mapeamento = null;
-          ["foraSemPermissao", "roupaInadequada", "semMaterial", "objetoNaoPedagogico", "tarefas"].forEach((campo) => {
+          ["foraSemPermissao", "roupaInadequada", "semMaterial", "objetoNaoPedagogico", "tarefas", "conversasParalelas", "falandoPalavrao", "atrapalharAula", "ausenciaNaoAutorizada", "naoRealizandoAtividade"].forEach((campo) => {
             if (typeof d.registros[alunoId][campo] !== "boolean") d.registros[alunoId][campo] = false;
           });
           if (typeof d.registros[alunoId].observacoes !== "string") d.registros[alunoId].observacoes = "";
@@ -783,12 +811,13 @@ function migrarSeNecessario(parsed) {
       b.dias.forEach((d) => {
         if (typeof d.registradoSalaFuturo !== "boolean") d.registradoSalaFuturo = false;
         if (typeof d.conteudoAula !== "string") d.conteudoAula = "";
+        if (typeof d.quantidadeAulas !== "number" || d.quantidadeAulas < 1) d.quantidadeAulas = 1;
         Object.keys(d.registros).forEach((alunoId) => {
           if (typeof d.registros[alunoId].celularSemAutorizacao !== "boolean") {
             d.registros[alunoId].celularSemAutorizacao = false;
           }
           if (!("mapeamento" in d.registros[alunoId])) d.registros[alunoId].mapeamento = null;
-          ["foraSemPermissao", "roupaInadequada", "semMaterial", "objetoNaoPedagogico", "tarefas"].forEach((campo) => {
+          ["foraSemPermissao", "roupaInadequada", "semMaterial", "objetoNaoPedagogico", "tarefas", "conversasParalelas", "falandoPalavrao", "atrapalharAula", "ausenciaNaoAutorizada", "naoRealizandoAtividade"].forEach((campo) => {
             if (typeof d.registros[alunoId][campo] !== "boolean") d.registros[alunoId][campo] = false;
           });
           if (typeof d.registros[alunoId].observacoes !== "string") d.registros[alunoId].observacoes = "";
@@ -909,6 +938,21 @@ function carregar() {
 /* ---------- Exportar resumos para Word / Google Docs ---------- */
 // gera um arquivo .doc (HTML por dentro) — Word abre direto, e no Google Docs
 // basta subir no Google Drive e escolher "Abrir com Google Docs"
+// o .doc gerado tem seu próprio <style> bem simples (não leva o CSS do app
+// inteiro) — então, sem isso, o campo de nota manual apareceria no Word como
+// uma caixinha de formulário editável, e ainda duplicada com o texto que só
+// deveria aparecer na impressão. Aqui troca isso por texto simples antes de
+// exportar, sem mexer na tela que a pessoa está vendo (trabalha numa cópia)
+function prepararParaExportWord(elemento) {
+  const clone = elemento.cloneNode(true);
+  clone.querySelectorAll(".nota-manual-input").forEach((input) => {
+    const span = document.createElement("span");
+    span.textContent = input.value || "—";
+    input.replaceWith(span);
+  });
+  clone.querySelectorAll(".nota-manual-print-only").forEach((el) => el.remove());
+  return clone;
+}
 function gerarDocumentoWord(titulo, corpoHtml) {
   return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head><meta charset="utf-8"><title>${esc(titulo)}</title>
@@ -948,7 +992,7 @@ function exportarResumoBimestreWord(turmaId, bimestreId) {
   if (turma.escola) corpo += `<p class="subinfo">${esc(turma.escola)}</p>`;
   corpo += `<h2>Resumo — ${esc(bimestre.nome)}</h2>`;
   corpo += `<p class="subinfo">Gerado em ${new Date().toLocaleDateString("pt-BR")}</p>`;
-  tabelas.forEach(t => { corpo += t.outerHTML; });
+  tabelas.forEach(t => { corpo += prepararParaExportWord(t).outerHTML; });
   baixarArquivoDoc(`resumo-${nomeArquivoSeguro(bimestre.nome)}.doc`, gerarDocumentoWord("Resumo do bimestre", corpo));
 }
 function exportarResumoAnoWord(turmaId) {
@@ -959,7 +1003,7 @@ function exportarResumoAnoWord(turmaId) {
   if (turma.escola) corpo += `<p class="subinfo">${esc(turma.escola)}</p>`;
   corpo += `<h2>Resumo do Ano</h2>`;
   corpo += `<p class="subinfo">Gerado em ${new Date().toLocaleDateString("pt-BR")}</p>`;
-  corpo += tabela.outerHTML;
+  corpo += prepararParaExportWord(tabela).outerHTML;
   const checklist = document.querySelector(".sala-futuro-checklist");
   if (checklist) {
     corpo += `<h2>${t("sala_futuro_titulo")}</h2><ul>`;
@@ -977,7 +1021,7 @@ function exportarBackup() {
   const blob = new Blob([dados], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const dataHoje = new Date().toISOString().slice(0, 10);
+  const dataHoje = formatarDataLocalISO(new Date());
   a.href = url;
   a.download = `backup-diario-turmas-${dataHoje}.json`;
   document.body.appendChild(a);
@@ -1193,6 +1237,7 @@ function deleteAluno(turmaId, alunoId) {
 function addBimestre(turmaId) {
   const t = turmas.find(t => t.id === turmaId);
   const b = novoBimestre(t.bimestres.length + 1);
+  b.dias[0].data = proximaDataParaTurma(t.diasSemana, []); // respeita os dias da semana da turma, se já configurados
   t.bimestres.push(b);
   t.bimestreAtivoId = b.id;
   salvar(); render();
@@ -1214,6 +1259,13 @@ function updateBimestre(turmaId, bimestreId, patch) {
   const t = turmas.find(t => t.id === turmaId);
   Object.assign(t.bimestres.find(b => b.id === bimestreId), patch);
   commitDebounced();
+}
+// usada pelos botões de preenchimento rápido (clique único, não digitação
+// caractere por caractere) — atualiza a tela na hora, sem esperar o debounce
+function updateBimestreImediato(turmaId, bimestreId, patch) {
+  const t = turmas.find(t => t.id === turmaId);
+  Object.assign(t.bimestres.find(b => b.id === bimestreId), patch);
+  salvar(); render();
 }
 function deleteBimestre(turmaId, bimestreId) {
   const t = turmas.find(t => t.id === turmaId);
@@ -1293,13 +1345,22 @@ function getBimestre(turmaId, bimestreId) {
 // devolve a próxima data (ISO) que cai num dos dias da semana cadastrados pra
 // essa turma, começando por hoje — se hoje já for um dia certo, devolve hoje
 // mesmo; se a turma não tiver dias da semana cadastrados, devolve hoje sem calcular nada
-function proximaDataParaTurma(diasSemana) {
+// calcula a data sugerida pro próximo dia de aula, respeitando os dias da
+// semana configurados pra turma. Se a turma já tem dias cadastrados, avança
+// a partir da data mais recente entre eles (senão, toda aula nova sugeriria
+// sempre a mesma data — a mais próxima a partir de hoje — em vez de ir
+// progredindo: segunda, quarta, sexta, próxima segunda...). Só quando a
+// turma ainda não tem nenhum dia é que a busca começa a partir de hoje.
+function proximaDataParaTurma(diasSemana, diasExistentes) {
   if (!diasSemana || diasSemana.length === 0) return hoje();
-  const base = new Date();
-  for (let i = 0; i < 7; i++) {
+  const datasExistentes = (diasExistentes || []).map(d => d.data).filter(Boolean).sort();
+  const ultimaData = datasExistentes.length ? datasExistentes[datasExistentes.length - 1] : null;
+  const base = ultimaData ? new Date(ultimaData + "T00:00:00") : new Date();
+  const inicio = ultimaData ? 1 : 0; // com uma ultima data, comeca a busca no dia SEGUINTE a ela
+  for (let i = inicio; i < inicio + 7; i++) {
     const candidata = new Date(base);
     candidata.setDate(base.getDate() + i);
-    if (diasSemana.includes(candidata.getDay())) return candidata.toISOString().slice(0, 10);
+    if (diasSemana.includes(candidata.getDay())) return formatarDataLocalISO(candidata);
   }
   return hoje();
 }
@@ -1317,7 +1378,7 @@ function addDia(turmaId, bimestreId) {
   const turma = turmas.find(t => t.id === turmaId);
   const b = getBimestre(turmaId, bimestreId);
   const d = novoDia(b.dias.length + 1);
-  d.data = proximaDataParaTurma(turma.diasSemana);
+  d.data = proximaDataParaTurma(turma.diasSemana, b.dias);
   b.dias.push(d);
   ordenarDiasPorData(b.dias);
   b.diaAtivoId = d.id;
@@ -1352,6 +1413,18 @@ function updateDiaImediato(turmaId, bimestreId, diaId, patch) {
   if ("data" in patch) ordenarDiasPorData(b.dias);
   salvar(); render();
 }
+// usado pelos "chips" de texto rápido (conteúdo da aula, observações do aluno):
+// insere uma frase pronta no textarea mais próximo, sem precisar mexer com o
+// texto que a pessoa já tinha digitado ali — lê e escreve direto no campo em
+// vez de reconstruir o valor a partir dos dados, pra não esbarrar em aspas ou
+// caracteres especiais que o usuário tenha digitado
+function inserirTextoRapido(botao, texto) {
+  const campo = botao.closest(".campo-com-presets").querySelector("textarea");
+  const atual = campo.value.trim();
+  campo.value = atual ? `${atual}. ${texto}` : texto;
+  campo.dispatchEvent(new Event("input", { bubbles: true }));
+  campo.focus();
+}
 function deleteDia(turmaId, bimestreId, diaId) {
   const b = getBimestre(turmaId, bimestreId);
   b.dias = b.dias.filter(d => d.id !== diaId);
@@ -1361,10 +1434,25 @@ function deleteDia(turmaId, bimestreId, diaId) {
 }
 
 /* ---------- Ações: registro (por dia + aluno, dentro de um bimestre) ---------- */
+// ocorrências que, quando marcadas (não quando desmarcadas), baixam um nível
+// no Comportamento daquele dia — "Não está no Mapeamento" fica de fora
+// porque é sobre participação num programa, não sobre comportamento em si
+const OCORRENCIAS_QUE_AFETAM_COMPORTAMENTO = [
+  "foraSemPermissao", "roupaInadequada", "semMaterial", "objetoNaoPedagogico", "celularSemAutorizacao",
+  "conversasParalelas", "falandoPalavrao", "atrapalharAula", "ausenciaNaoAutorizada", "naoRealizandoAtividade",
+];
 function updateRegistro(turmaId, bimestreId, diaId, alunoId, patch, opts) {
   const b = getBimestre(turmaId, bimestreId);
   const dia = b.dias.find(d => d.id === diaId);
   const reg = getRegistro(dia, alunoId);
+  for (const campo of OCORRENCIAS_QUE_AFETAM_COMPORTAMENTO) {
+    // só desce um nível na TRANSIÇÃO de desmarcado -> marcado (marcar de novo
+    // ou desmarcar não mexe no comportamento sozinho)
+    if (patch[campo] === true && reg[campo] !== true) {
+      const atual = reg.comportamento ? COMPORTAMENTO.findIndex(c => c.key === reg.comportamento) : 0;
+      reg.comportamento = COMPORTAMENTO[Math.min(atual + 1, COMPORTAMENTO.length - 1)].key;
+    }
+  }
   Object.assign(reg, patch);
   if (opts && opts.debounce) { commitDebounced(); return; }
   salvar(); render();
@@ -1397,15 +1485,25 @@ function confirmarDelete() {
 }
 
 /* ---------- Resumo do bimestre ---------- */
+// só conta um dia como "aula dada" se a chamada foi preenchida (pelo menos um
+// aluno com frequência marcada naquele dia) — um dia recém-criado, ainda sem
+// chamada, não deveria contar como aula já dada
+function diaTemChamadaPreenchida(dia) {
+  return Object.values(dia.registros).some(r => r.frequencia !== null && r.frequencia !== undefined);
+}
+function calcularAulasDadas(bimestre) {
+  return bimestre.dias.reduce((soma, d) => soma + (diaTemChamadaPreenchida(d) ? (d.quantidadeAulas || 1) : 0), 0);
+}
 function calcularResumo(alunos, bimestre) {
   return alunos.map(a => {
-    const acc = { presente: 0, ausente: 0, atraso: 0, ativSim: 0, ativParcial: 0, ativNao: 0, trabEntregue: 0, trabPendente: 0, caderno: 0, apostila: 0, ocorrencias: 0, mapSim: 0, mapParcial: 0, mapNao: 0, faces: { excelente: 0, bom: 0, regular: 0, insatisfatorio: 0 }, totalDias: bimestre.dias.length };
+    const acc = { presente: 0, ausente: 0, atraso: 0, faltaMedica: 0, ativSim: 0, ativParcial: 0, ativNao: 0, trabEntregue: 0, trabPendente: 0, caderno: 0, apostila: 0, ocorrencias: 0, mapSim: 0, mapParcial: 0, mapNao: 0, faces: { excelente: 0, bom: 0, regular: 0, insatisfatorio: 0 }, totalDias: bimestre.dias.length };
     bimestre.dias.forEach(d => {
       const r = d.registros[a.id];
       if (!r) return;
       if (r.frequencia === "presente") acc.presente++;
       if (r.frequencia === "ausente") acc.ausente++;
       if (r.frequencia === "atraso") acc.atraso++;
+      if (r.frequencia === "falta_medica") acc.faltaMedica++;
       if (r.atividade === "sim") acc.ativSim++;
       if (r.atividade === "parcial") acc.ativParcial++;
       if (r.atividade === "nao") acc.ativNao++;
@@ -1415,7 +1513,7 @@ function calcularResumo(alunos, bimestre) {
       if (r.apostila) acc.apostila++;
       // conta o dia como "com ocorrência" se qualquer uma dessas 5 coisas foi marcada —
       // um dia só conta uma vez, mesmo que tenha mais de uma ocorrência ao mesmo tempo
-      if (r.celularSemAutorizacao || r.foraSemPermissao || r.roupaInadequada || r.semMaterial || r.objetoNaoPedagogico) acc.ocorrencias++;
+      if (r.celularSemAutorizacao || r.foraSemPermissao || r.roupaInadequada || r.semMaterial || r.objetoNaoPedagogico || r.conversasParalelas || r.falandoPalavrao || r.atrapalharAula || r.ausenciaNaoAutorizada || r.naoRealizandoAtividade) acc.ocorrencias++;
       if (r.mapeamento === "sim") acc.mapSim++;
       if (r.mapeamento === "parcial") acc.mapParcial++;
       if (r.mapeamento === "nao") acc.mapNao++;
@@ -1463,6 +1561,7 @@ function renderMain() {
 
   if (turma.bimestres.length === 0) {
     const b = novoBimestre(1);
+    b.dias[0].data = proximaDataParaTurma(turma.diasSemana, []);
     turma.bimestres.push(b);
     turma.bimestreAtivoId = b.id;
     salvar();
@@ -1472,6 +1571,7 @@ function renderMain() {
 
   if (bimestreAtivo.dias.length === 0) {
     const d = novoDia(1);
+    d.data = proximaDataParaTurma(turma.diasSemana, []);
     bimestreAtivo.dias.push(d);
     bimestreAtivo.diaAtivoId = d.id;
     salvar();
@@ -1549,6 +1649,9 @@ function renderMain() {
         <div class="field">
           <label class="field-label">${t('aulas_planejadas')}</label>
           <input type="text" placeholder="ex.: 20" data-field="bimestre-${bimestreAtivo.id}-aulasTotal" value="${esc(bimestreAtivo.aulasTotal)}" oninput="updateBimestre('${turma.id}', '${bimestreAtivo.id}', {aulasTotal: this.value})">
+          <div class="pill-row-compacto" style="margin-top:6px">
+            ${[10, 15, 20, 25, 30, 40].map(n => `<button type="button" class="pill pill-compacto ${String(bimestreAtivo.aulasTotal) === String(n) ? 'active' : ''}" onclick="updateBimestreImediato('${turma.id}', '${bimestreAtivo.id}', {aulasTotal: '${n}'})">${n}</button>`).join("")}
+          </div>
         </div>
       </div>
 
@@ -1575,14 +1678,32 @@ function renderMain() {
           <input type="date" data-field="dia-${diaAtivo.id}-data" value="${esc(diaAtivo.data)}" oninput="updateDiaImediato('${turma.id}', '${bimestreAtivo.id}', '${diaAtivo.id}', {data: this.value})">
         </div>
         <div class="field">
-          <label class="field-label">${t("numero_aula")}</label>
-          <input type="text" data-field="dia-${diaAtivo.id}-numeroAula" value="${esc(diaAtivo.numeroAula)}" oninput="updateDia('${turma.id}', '${bimestreAtivo.id}', '${diaAtivo.id}', {numeroAula: this.value})" style="width:60px">
+          <label class="field-label" title="${t('numero_aula_titulo')}">${t("numero_aula")}</label>
+          <div class="stepper-numero">
+            <button type="button" title="${t('numero_aula_diminuir')}" onclick="updateDiaImediato('${turma.id}', '${bimestreAtivo.id}', '${diaAtivo.id}', {numeroAula: String(Math.max(1, (parseInt('${escJs(diaAtivo.numeroAula)}') || 1) - 1))})">▼</button>
+            <span>${esc(diaAtivo.numeroAula)}</span>
+            <button type="button" title="${t('numero_aula_aumentar')}" onclick="updateDiaImediato('${turma.id}', '${bimestreAtivo.id}', '${diaAtivo.id}', {numeroAula: String((parseInt('${escJs(diaAtivo.numeroAula)}') || 0) + 1)})">▲</button>
+          </div>
         </div>
-        ${bimestreAtivo.aulasTotal ? `<div style="font-size:12px;color:var(--cor-texto,#8A7FA8)">de ${esc(bimestreAtivo.aulasTotal)} planejadas neste bimestre</div>` : ""}
+        <div class="field">
+          <label class="field-label" title="${t('quantidade_aulas_titulo')}">${t("quantidade_aulas_label")}</label>
+          <div class="pill-row-compacto">
+            ${[1, 2, 3, 4].map(n => `<button type="button" class="pill pill-compacto ${diaAtivo.quantidadeAulas === n ? 'active' : ''}" onclick="updateDiaImediato('${turma.id}', '${bimestreAtivo.id}', '${diaAtivo.id}', {quantidadeAulas: ${n}})">${n}</button>`).join("")}
+          </div>
+        </div>
+        ${(() => {
+          const totalDado = calcularAulasDadas(bimestreAtivo);
+          const totalPlanejado = bimestreAtivo.aulasTotal ? ` ${t("de_aulas_planejadas").replace("{n}", esc(bimestreAtivo.aulasTotal))}` : "";
+          const chaveTotal = totalDado === 1 ? "aulas_dadas_ate_agora_singular" : "aulas_dadas_ate_agora";
+          return `<div style="font-size:12px;color:var(--cor-texto,#8A7FA8)">${t(chaveTotal).replace("{n}", totalDado)}${totalPlanejado}</div>`;
+        })()}
       </div>
 
-      <div class="field conteudo-aula-field">
+      <div class="field conteudo-aula-field campo-com-presets">
         <label class="field-label">${t("conteudo_aula_label")}</label>
+        <div class="presets-rapidos">
+          ${t("presets_conteudo_aula").map(p => `<button type="button" class="preset-chip" onclick="inserirTextoRapido(this, '${escJs(p)}')">${p}</button>`).join("")}
+        </div>
         <textarea rows="2" data-field="dia-${diaAtivo.id}-conteudoAula" placeholder="${t('conteudo_aula_placeholder')}" oninput="updateDia('${turma.id}', '${bimestreAtivo.id}', '${diaAtivo.id}', {conteudoAula: this.value})">${esc(diaAtivo.conteudoAula)}</textarea>
       </div>
 
@@ -1717,11 +1838,31 @@ function alunoCard(turma, bimestre, dia, a, i) {
         <div>
           <span class="campo-grupo-label">${t("ocorrencias_dia")}</span>
           <div class="material-row">
+            <label class="material-item" onclick="event.preventDefault(); updateRegistro('${turma.id}', '${bimestre.id}', '${dia.id}', '${a.id}', {atrapalharAula: ${!reg.atrapalharAula}})">
+              <span class="checkbox ${reg.atrapalharAula ? 'checked alert' : ''}">${reg.atrapalharAula ? '✓' : ''}</span>
+              <span style="${reg.atrapalharAula ? 'color:#B5765C;font-weight:600' : ''}">${t("atrapalhar_aula")}</span>
+            </label>
+            <label class="material-item" onclick="event.preventDefault(); updateRegistro('${turma.id}', '${bimestre.id}', '${dia.id}', '${a.id}', {ausenciaNaoAutorizada: ${!reg.ausenciaNaoAutorizada}})">
+              <span class="checkbox ${reg.ausenciaNaoAutorizada ? 'checked alert' : ''}">${reg.ausenciaNaoAutorizada ? '✓' : ''}</span>
+              <span style="${reg.ausenciaNaoAutorizada ? 'color:#B5765C;font-weight:600' : ''}">${t("ausencia_nao_autorizada")}</span>
+            </label>
+            <label class="material-item" onclick="event.preventDefault(); updateRegistro('${turma.id}', '${bimestre.id}', '${dia.id}', '${a.id}', {conversasParalelas: ${!reg.conversasParalelas}})">
+              <span class="checkbox ${reg.conversasParalelas ? 'checked alert' : ''}">${reg.conversasParalelas ? '✓' : ''}</span>
+              <span style="${reg.conversasParalelas ? 'color:#B5765C;font-weight:600' : ''}">${t("conversas_paralelas")}</span>
+            </label>
+            <label class="material-item" onclick="event.preventDefault(); updateRegistro('${turma.id}', '${bimestre.id}', '${dia.id}', '${a.id}', {falandoPalavrao: ${!reg.falandoPalavrao}})">
+              <span class="checkbox ${reg.falandoPalavrao ? 'checked alert' : ''}">${reg.falandoPalavrao ? '✓' : ''}</span>
+              <span style="${reg.falandoPalavrao ? 'color:#B5765C;font-weight:600' : ''}">${t("falando_palavrao")}</span>
+            </label>
             ${turma.mapeamento && a.noMapeamento ? `
             <label class="material-item" onclick="event.preventDefault(); updateRegistro('${turma.id}', '${bimestre.id}', '${dia.id}', '${a.id}', {mapeamento: ${reg.mapeamento === 'nao' ? 'null' : "'nao'"}})">
               <span class="checkbox ${reg.mapeamento === 'nao' ? 'checked alert' : ''}">${reg.mapeamento === 'nao' ? '✓' : ''}</span>
               <span style="${reg.mapeamento === 'nao' ? 'color:#B5765C;font-weight:600' : ''}">${t("nao_seguiu_mapeamento")}</span>
             </label>` : ""}
+            <label class="material-item" onclick="event.preventDefault(); updateRegistro('${turma.id}', '${bimestre.id}', '${dia.id}', '${a.id}', {naoRealizandoAtividade: ${!reg.naoRealizandoAtividade}})">
+              <span class="checkbox ${reg.naoRealizandoAtividade ? 'checked alert' : ''}">${reg.naoRealizandoAtividade ? '✓' : ''}</span>
+              <span style="${reg.naoRealizandoAtividade ? 'color:#B5765C;font-weight:600' : ''}">${t("nao_realizando_atividade")}</span>
+            </label>
             <label class="material-item" onclick="event.preventDefault(); updateRegistro('${turma.id}', '${bimestre.id}', '${dia.id}', '${a.id}', {semMaterial: ${!reg.semMaterial}})">
               <span class="checkbox ${reg.semMaterial ? 'checked alert' : ''}">${reg.semMaterial ? '✓' : ''}</span>
               <span style="${reg.semMaterial ? 'color:#B5765C;font-weight:600' : ''}">${t("sem_material")}</span>
@@ -1755,8 +1896,11 @@ function alunoCard(turma, bimestre, dia, a, i) {
           </div>
           <div class="face-selected-label">${faceSelecionada ? `${faceSelecionada.label} — Nota ${faceSelecionada.nota}` : t("nenhum_registrado")}</div>
         </div>
-        <div class="campo-observacoes-aluno">
+        <div class="campo-observacoes-aluno campo-com-presets">
           <span class="campo-grupo-label">${t("observacoes_aluno")}</span>
+          <div class="presets-rapidos">
+            ${t("presets_observacoes_aluno").map(p => `<button type="button" class="preset-chip" onclick="inserirTextoRapido(this, '${escJs(p)}')">${p}</button>`).join("")}
+          </div>
           <textarea rows="2" placeholder="ex.: conversou com a família por causa de..." data-field="obs-${dia.id}-${a.id}" oninput="updateRegistro('${turma.id}', '${bimestre.id}', '${dia.id}', '${a.id}', {observacoes: this.value}, {debounce: true})">${esc(reg.observacoes)}</textarea>
         </div>
       </div>
@@ -1809,8 +1953,12 @@ const SEMAFORO_INFO = {
 
 function renderResumo(turma, bimestre) {
   const resumo = calcularResumo(ordenarPorNome(turma.alunos), bimestre);
+  const totalAulasDadas = calcularAulasDadas(bimestre);
+  const totalAulasPlanejadas = bimestre.aulasTotal ? ` ${t("de_aulas_planejadas").replace("{n}", esc(bimestre.aulasTotal))}` : "";
+  const chaveAulasDadas = totalAulasDadas === 1 ? "aulas_dadas_ate_agora_singular" : "aulas_dadas_ate_agora";
   const conteudo = `
     <div class="resumo-section">
+      <div class="resumo-aulas-dadas">📚 ${t(chaveAulasDadas).replace("{n}", totalAulasDadas)}${totalAulasPlanejadas}</div>
       <div class="resumo-title">${t("resumo_comportamento_titulo")}</div>
       <div class="resumo-sub">Nota equivalente: 😄 Excelente = 10 · 🙂 Bom = 8,0 · 😐 Regular = 6,0 · 🙁 Insatisfatório = 4,0 · arraste para o lado para ver mais</div>
       <div class="resumo-scroll">
@@ -1856,11 +2004,12 @@ function renderResumo(turma, bimestre) {
               <th class="name-col">Estudante</th>
               <th>Presenças</th>
               <th>Faltas</th>
+              <th>Falta médica</th>
               <th>Atrasos</th>
               <th>Atividade OK</th>
               <th>Atividades realizadas</th>
               <th>Trabalho entregue</th>
-              <th title="Uso inadequado do celular, saiu da sala sem permissão, roupa inadequada, sem material ou objeto não pedagógico">Ocorrências</th>
+              <th title="Quantidade de dias com pelo menos uma ocorrência marcada, de qualquer tipo">Ocorrências</th>
               <th>Comportamento</th>
               ${turma.mapeamento ? `<th>Mapeamento</th>` : ""}
               <th>Nota Bimestral</th>
@@ -1874,6 +2023,7 @@ function renderResumo(turma, bimestre) {
                 <td class="name-cell">${nomeOuPlaceholder(r.aluno.nome)}</td>
                 <td>${r.presente}/${r.totalDias}</td>
                 <td>${r.ausente}/${r.totalDias}</td>
+                <td>${r.faltaMedica}/${r.totalDias}</td>
                 <td>${r.atraso}/${r.totalDias}</td>
                 <td>${r.ativSim}/${r.totalDias}</td>
                 <td>${r.totalAtividades === 0 ? "—" : `${r.atividadesEntregues}/${r.totalAtividades}`}</td>
@@ -1950,7 +2100,7 @@ const TRADUCOES = {
     alunos_titulo: "👥 Alunos — frequência e comportamento do dia", buscar_aluno: "🔎 Buscar aluno por nome…",
     adicionar_aluno: "+ Adicionar aluno", colar_lista: "📋 Colar lista de alunos", marcar_todos: "✓ Marcar todos como presentes",
     semaforo_vai_bem: "Vai bem", semaforo_atencao: "Precisa de atenção", semaforo_alerta: "Alerta", semaforo_vazio: "Sem registros suficientes ainda",
-    frequencia: "Frequência", presente: "Presente", ausente: "Ausente", atraso: "Atraso",
+    frequencia: "Frequência", presente: "Presente", ausente: "Ausente", atraso: "Atraso", falta_medica: "Falta médica",
     atividade_sala: "Atividade em sala", sim: "Sim", parcial: "Parcial", nao: "Não",
     trabalho_bimestre: "Trabalho do bimestre", entregue: "Entregue", pendente: "Pendente",
     material: "Material", caderno: "Conteúdo anotado", apostila: "Apostila em dia", tarefas: "Tarefas em dia",
@@ -1958,6 +2108,9 @@ const TRADUCOES = {
     observacoes_aluno: "Observações deste aluno hoje",
     celular: "Uso inadequado do celular", fora_sala: "Saiu da sala sem permissão", roupa: "Roupa inadequada",
     sem_material: "Não trouxe o material", objeto: "Trouxe objeto não pedagógico", nao_seguiu_mapeamento: "Não está no Mapeamento",
+    atrapalhar_aula: "Atrapalhar o andamento da aula", ausencia_nao_autorizada: "Ausência não autorizada",
+    conversas_paralelas: "Conversas paralelas (durante a explicação)", falando_palavrao: "Falando palavrão",
+    nao_realizando_atividade: "Não está realizando a atividade proposta",
     nenhum_registrado: "Nenhum registrado ainda",
     atividades_titulo: "📌 Atividades para entregar", adicionar_atividade: "+ Adicionar atividade",
     avaliacoes_titulo: "📝 Avaliações", adicionar_avaliacao: "+ Adicionar avaliação",
@@ -1986,6 +2139,12 @@ const TRADUCOES = {
     status_backup_baixado: "💾 Backup baixado", status_backup_restaurado: "✓ Backup restaurado com sucesso",
     verificar_atualizacao: "🔄 Verificar atualização", status_verificando_atualizacao: "🔄 Verificando atualização…",
     conteudo_aula_label: "Conteúdo trabalhado nesta aula", conteudo_aula_placeholder: "ex.: Frações — operações básicas",
+    presets_conteudo_aula: ["Revisão de conteúdo", "Conteúdo novo", "Exercícios", "Avaliação", "Correção de atividades", "Trabalho em grupo"],
+    presets_observacoes_aluno: ["Ótima participação", "Empenho em sala", "Colaborativo com os colegas", "Melhora perceptível", "Elogiado pelo empenho", "Falando durante a aula", "Dificuldade de concentração", "Não realizou as atividades", "Precisa de reforço"],
+    quantidade_aulas_label: "Qtd. de aulas", quantidade_aulas_titulo: "Quantas aulas (períodos) foram dadas neste dia — útil pra aulas geminadas/duplas",
+    numero_aula_titulo: "Só o rótulo deste dia — não cria uma aula nova. Pra registrar outra aula, use \"+ Novo dia de aula\" ali em cima.",
+    numero_aula_diminuir: "Diminuir o número", numero_aula_aumentar: "Aumentar o número",
+    aulas_dadas_ate_agora: "{n} aulas dadas até agora", aulas_dadas_ate_agora_singular: "{n} aula dada até agora", de_aulas_planejadas: "de {n} planejadas neste bimestre",
     nota_manual_titulo: "Sem avaliação lançada neste bimestre — digite aqui a média que você já tinha registrada de outra forma",
     instalar_modal_titulo: "📲 Como instalar o aplicativo", instalar_modal_sub: "Seu navegador não liberou a instalação automática — siga esses passos rapidinhos:",
     instalar_ios_1: "Toque no ícone de compartilhar (o quadrado com uma seta ↑) na barra do navegador.",
@@ -2049,7 +2208,7 @@ const TRADUCOES = {
     alunos_titulo: "👥 Alunos — assiduidade e comportamento do dia", buscar_aluno: "🔎 Procurar aluno por nome…",
     adicionar_aluno: "+ Adicionar aluno", colar_lista: "📋 Colar lista de alunos", marcar_todos: "✓ Marcar todos como presentes",
     semaforo_vai_bem: "Vai bem", semaforo_atencao: "Precisa de atenção", semaforo_alerta: "Alerta", semaforo_vazio: "Ainda sem registos suficientes",
-    frequencia: "Assiduidade", presente: "Presente", ausente: "Ausente", atraso: "Atraso",
+    frequencia: "Assiduidade", presente: "Presente", ausente: "Ausente", atraso: "Atraso", falta_medica: "Falta médica",
     atividade_sala: "Atividade na aula", sim: "Sim", parcial: "Parcial", nao: "Não",
     trabalho_bimestre: "Trabalho do período", entregue: "Entregue", pendente: "Pendente",
     material: "Material", caderno: "Conteúdo anotado", apostila: "Apostila em dia", tarefas: "Tarefas em dia",
@@ -2057,6 +2216,9 @@ const TRADUCOES = {
     observacoes_aluno: "Observações deste aluno hoje",
     celular: "Uso inadequado do telemóvel", fora_sala: "Saiu da sala sem permissão", roupa: "Roupa inadequada",
     sem_material: "Não trouxe o material", objeto: "Trouxe objeto não pedagógico", nao_seguiu_mapeamento: "Não está no Mapeamento",
+    atrapalhar_aula: "Atrapalhar o andamento da aula", ausencia_nao_autorizada: "Ausência não autorizada",
+    conversas_paralelas: "Conversas paralelas (durante a explicação)", falando_palavrao: "A dizer asneiras",
+    nao_realizando_atividade: "Não está a realizar a atividade proposta",
     nenhum_registrado: "Nenhum registado ainda",
     atividades_titulo: "📌 Trabalhos para entregar", adicionar_atividade: "+ Adicionar trabalho",
     avaliacoes_titulo: "📝 Avaliações", adicionar_avaliacao: "+ Adicionar avaliação",
@@ -2085,6 +2247,12 @@ const TRADUCOES = {
     status_backup_baixado: "💾 Cópia de segurança transferida", status_backup_restaurado: "✓ Cópia de segurança restaurada com sucesso",
     verificar_atualizacao: "🔄 Verificar atualização", status_verificando_atualizacao: "🔄 A verificar atualização…",
     conteudo_aula_label: "Conteúdo trabalhado nesta aula", conteudo_aula_placeholder: "ex.: Frações — operações básicas",
+    presets_conteudo_aula: ["Revisão de conteúdo", "Conteúdo novo", "Exercícios", "Avaliação", "Correção de atividades", "Trabalho em grupo"],
+    presets_observacoes_aluno: ["Ótima participação", "Empenho na aula", "Colaborativo com os colegas", "Melhoria percetível", "Elogiado pelo empenho", "A falar durante a aula", "Dificuldade de concentração", "Não realizou as atividades", "Precisa de reforço"],
+    quantidade_aulas_label: "Qtd. de aulas", quantidade_aulas_titulo: "Quantas aulas (períodos) foram dadas neste dia — útil para aulas geminadas/duplas",
+    numero_aula_titulo: "Só o rótulo deste dia — não cria uma aula nova. Para registar outra aula, use \"+ Novo dia\" ali em cima.",
+    numero_aula_diminuir: "Diminuir o número", numero_aula_aumentar: "Aumentar o número",
+    aulas_dadas_ate_agora: "{n} aulas dadas até agora", aulas_dadas_ate_agora_singular: "{n} aula dada até agora", de_aulas_planejadas: "de {n} planeadas neste período",
     nota_manual_titulo: "Sem avaliação lançada neste período — digite aqui a média que já tinha registada de outra forma",
     instalar_modal_titulo: "📲 Como instalar a aplicação", instalar_modal_sub: "O seu navegador não permitiu a instalação automática — siga estes passos rápidos:",
     instalar_ios_1: "Toque no ícone de partilhar (o quadrado com uma seta ↑) na barra do navegador.",
@@ -2148,7 +2316,7 @@ const TRADUCOES = {
     alunos_titulo: "👥 Students — attendance and behavior for the day", buscar_aluno: "🔎 Search student by name…",
     adicionar_aluno: "+ Add student", colar_lista: "📋 Paste student list", marcar_todos: "✓ Mark all as present",
     semaforo_vai_bem: "Doing well", semaforo_atencao: "Needs attention", semaforo_alerta: "Alert", semaforo_vazio: "Not enough records yet",
-    frequencia: "Attendance", presente: "Present", ausente: "Absent", atraso: "Late",
+    frequencia: "Attendance", presente: "Present", ausente: "Absent", atraso: "Late", falta_medica: "Medical leave",
     atividade_sala: "In-class activity", sim: "Yes", parcial: "Partial", nao: "No",
     trabalho_bimestre: "Term assignment", entregue: "Submitted", pendente: "Pending",
     material: "Materials", caderno: "Content noted down", apostila: "Workbook up to date", tarefas: "Homework up to date",
@@ -2156,6 +2324,9 @@ const TRADUCOES = {
     observacoes_aluno: "Notes about this student today",
     celular: "Inappropriate phone use", fora_sala: "Left the room without permission", roupa: "Inappropriate clothing",
     sem_material: "Did not bring materials", objeto: "Brought a non-educational object", nao_seguiu_mapeamento: "Not in the Mapping",
+    atrapalhar_aula: "Disrupting the class", ausencia_nao_autorizada: "Unauthorized absence",
+    conversas_paralelas: "Side conversations (during the explanation)", falando_palavrao: "Using inappropriate language",
+    nao_realizando_atividade: "Not doing the assigned activity",
     nenhum_registrado: "Nothing recorded yet",
     atividades_titulo: "📌 Assignments to submit", adicionar_atividade: "+ Add assignment",
     avaliacoes_titulo: "📝 Assessments", adicionar_avaliacao: "+ Add assessment",
@@ -2184,6 +2355,12 @@ const TRADUCOES = {
     status_backup_baixado: "💾 Backup downloaded", status_backup_restaurado: "✓ Backup restored successfully",
     verificar_atualizacao: "🔄 Check for update", status_verificando_atualizacao: "🔄 Checking for update…",
     conteudo_aula_label: "Content covered in this class", conteudo_aula_placeholder: "e.g., Fractions — basic operations",
+    presets_conteudo_aula: ["Content review", "New content", "Exercises", "Assessment", "Reviewing assignments", "Group work"],
+    presets_observacoes_aluno: ["Great participation", "Good effort in class", "Collaborative with classmates", "Noticeable improvement", "Praised for effort", "Talking during class", "Trouble concentrating", "Did not complete the activities", "Needs extra support"],
+    quantidade_aulas_label: "No. of classes", quantidade_aulas_titulo: "How many classes (periods) were taught this day — useful for double/back-to-back periods",
+    numero_aula_titulo: "Just the label for this day — it does not create a new class. To log another class, use \"+ New class day\" above.",
+    numero_aula_diminuir: "Decrease the number", numero_aula_aumentar: "Increase the number",
+    aulas_dadas_ate_agora: "{n} classes taught so far", aulas_dadas_ate_agora_singular: "{n} class taught so far", de_aulas_planejadas: "of {n} planned this term",
     nota_manual_titulo: "No assessment entered this term — type here the average you already had recorded some other way",
     instalar_modal_titulo: "📲 How to install the app", instalar_modal_sub: "Your browser did not offer automatic installation — just follow these quick steps:",
     instalar_ios_1: "Tap the Share icon (the square with an arrow ↑) in the browser bar.",
@@ -2247,7 +2424,7 @@ const TRADUCOES = {
     alunos_titulo: "👥 Estudiantes — asistencia y comportamiento del día", buscar_aluno: "🔎 Buscar estudiante por nombre…",
     adicionar_aluno: "+ Añadir estudiante", colar_lista: "📋 Pegar lista de estudiantes", marcar_todos: "✓ Marcar todos como presentes",
     semaforo_vai_bem: "Va bien", semaforo_atencao: "Necesita atención", semaforo_alerta: "Alerta", semaforo_vazio: "Aún sin registros suficientes",
-    frequencia: "Asistencia", presente: "Presente", ausente: "Ausente", atraso: "Tardanza",
+    frequencia: "Asistencia", presente: "Presente", ausente: "Ausente", atraso: "Tardanza", falta_medica: "Falta médica",
     atividade_sala: "Actividad en clase", sim: "Sí", parcial: "Parcial", nao: "No",
     trabalho_bimestre: "Trabajo del bimestre", entregue: "Entregado", pendente: "Pendiente",
     material: "Material", caderno: "Contenido anotado", apostila: "Apostila al día", tarefas: "Tareas al día",
@@ -2255,6 +2432,9 @@ const TRADUCOES = {
     observacoes_aluno: "Observaciones de este estudiante hoy",
     celular: "Uso inadecuado del celular", fora_sala: "Salió del aula sin permiso", roupa: "Ropa inadecuada",
     sem_material: "No trajo el material", objeto: "Trajo un objeto no pedagógico", nao_seguiu_mapeamento: "No está en el Mapeamento",
+    atrapalhar_aula: "Interrumpir el desarrollo de la clase", ausencia_nao_autorizada: "Ausencia no autorizada",
+    conversas_paralelas: "Conversaciones paralelas (durante la explicación)", falando_palavrao: "Diciendo groserías",
+    nao_realizando_atividade: "No está realizando la actividad propuesta",
     nenhum_registrado: "Aún sin ningún registro",
     atividades_titulo: "📌 Tareas por entregar", adicionar_atividade: "+ Añadir tarea",
     avaliacoes_titulo: "📝 Evaluaciones", adicionar_avaliacao: "+ Añadir evaluación",
@@ -2283,6 +2463,12 @@ const TRADUCOES = {
     status_backup_baixado: "💾 Copia de seguridad descargada", status_backup_restaurado: "✓ Copia de seguridad restaurada con éxito",
     verificar_atualizacao: "🔄 Buscar actualización", status_verificando_atualizacao: "🔄 Buscando actualización…",
     conteudo_aula_label: "Contenido trabajado en esta clase", conteudo_aula_placeholder: "ej.: Fracciones — operaciones básicas",
+    presets_conteudo_aula: ["Repaso de contenido", "Contenido nuevo", "Ejercicios", "Evaluación", "Corrección de actividades", "Trabajo en grupo"],
+    presets_observacoes_aluno: ["Excelente participación", "Buen esfuerzo en clase", "Colaborativo con sus compañeros", "Mejora notable", "Elogiado por su esfuerzo", "Hablando durante la clase", "Dificultad para concentrarse", "No realizó las actividades", "Necesita refuerzo"],
+    quantidade_aulas_label: "Cant. de clases", quantidade_aulas_titulo: "Cuántas clases (periodos) se dieron este día — útil para clases dobles/seguidas",
+    numero_aula_titulo: "Solo la etiqueta de este día — no crea una clase nueva. Para registrar otra clase, usa \"+ Nuevo día\" arriba.",
+    numero_aula_diminuir: "Disminuir el número", numero_aula_aumentar: "Aumentar el número",
+    aulas_dadas_ate_agora: "{n} clases dadas hasta ahora", aulas_dadas_ate_agora_singular: "{n} clase dada hasta ahora", de_aulas_planejadas: "de {n} planificadas este bimestre",
     nota_manual_titulo: "Sin evaluación registrada este bimestre — escribe aquí el promedio que ya tenías registrado de otra forma",
     instalar_modal_titulo: "📲 Cómo instalar la aplicación", instalar_modal_sub: "Tu navegador no ofreció la instalación automática — sigue estos pasos rápidos:",
     instalar_ios_1: "Toca el ícono de compartir (el cuadrado con una flecha ↑) en la barra del navegador.",
@@ -2762,7 +2948,7 @@ function renderResumoBimestres(turma) {
               <th class="name-col">Estudante</th>
               ${turma.bimestres.map(b => `<th class="${b.id === turma.bimestreAtivoId ? 'coluna-bimestre-atual' : ''}">${esc(b.nome) || "Bimestre"}</th>`).join("")}
               <th>Presenças Totais</th>
-              <th title="Uso inadequado do celular, saiu da sala sem permissão, roupa inadequada, sem material ou objeto não pedagógico">Ocorrências Totais</th>
+              <th title="Quantidade de dias com pelo menos uma ocorrência marcada, de qualquer tipo">Ocorrências Totais</th>
               ${turma.mapeamento ? `<th>Mapeamento Total</th>` : ""}
             </tr>
           </thead>
@@ -2784,7 +2970,7 @@ function renderResumoBimestres(turma) {
                   conteudoCelula = `<span style="font-weight:700;color:${cor}">${mediaAval.toFixed(1)}</span>`;
                 } else {
                   const notaManual = (b.notasManuais && b.notasManuais[a.id]) || "";
-                  conteudoCelula = `<input type="text" inputmode="decimal" class="nota-manual-input" placeholder="—" value="${esc(notaManual)}" title="${t('nota_manual_titulo')}" data-field="notamanual-${b.id}-${a.id}" oninput="this.value = apenasNota(this.value); atualizarNotaManual('${turma.id}', '${b.id}', '${a.id}', this.value)">`;
+                  conteudoCelula = `<input type="text" inputmode="decimal" class="nota-manual-input" placeholder="—" value="${esc(notaManual)}" title="${t('nota_manual_titulo')}" data-field="notamanual-${b.id}-${a.id}" oninput="this.value = apenasNota(this.value); atualizarNotaManual('${turma.id}', '${b.id}', '${a.id}', this.value)"><span class="nota-manual-print-only">${notaManual ? esc(notaManual) : "—"}</span>`;
                 }
                 return `<td class="${atual}">${conteudoCelula}</td>`;
               }).join("");
